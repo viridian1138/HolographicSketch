@@ -6,7 +6,7 @@ HolographicSketch
 
 
 
-Holographic Sketch is a dsfhlsdkjfsdlkfjsdflkjsdlfakdsd.
+Holographic Sketch is a Stereoscopic App for Sketching on an HTC OpenSense Phone with Android such as the HTC Evo 3D.
 
 
 
