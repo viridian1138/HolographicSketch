@@ -1,0 +1,160 @@
+
+<TITLE>Meta Introduction</TITLE>
+<BODY>
+<H1>An Introduction to meta</H1>
+
+	<P><H2>Part I - Introduction and Terminology</H2>
+
+	<P>The meta package defines the fundamental data structures used in the project.
+Many computer scientists consider the data structure, or DS, to be a fundamental part of
+ software design.  One important notion associated with a DS is that it implements an abstract data 
+type, or ADT.  That is to say the DS is a type which supports a well-defined set of operations, and that 
+the internal structure of a DS can be changed without affecting programs which use it if appropriate 
+changes are made to the implementation of these operations.
+
+	<P>Similarly, it is accepted that there are a set of DSes that are independent of the type of 
+data that they store.  For instance, one would expect a single linked-list implementation to be able to 
+store a list of integers, a list of floating point numbers, or a list of records without modification or 
+recompilation.  Further one should be able to generate lists of binary trees of some record type, or 
+binary trees of lists of some record type, or lists of lists of some record type just by applying 
+appropriate DS operations.  Variant data (such as the use of variant records) should be storable.  
+This includes lists that store simple records in some nodes, and trees or queues in others.
+
+	<P>Many current implementations of DSes have some or all of the above traits.  However, in many 
+cases they require the programmer to write many of the low-level routines required to actually manipulate 
+the data.  In particular, there is no standard way for an arbitrary DS to copy itself (and its data), or 
+to delete itself (and its data).  In reality, there are an infinite number of ways that a particular DS 
+might do this.  However, there are some that are much more "important" than others.  A good analogy to 
+this is provided by the study of algorithms for binary tree traversals.  There are an infinite number of 
+possible traversal algorithms (if we allow data-dependent traversals, and we say that the data can be of 
+any type), but three of them are considered to be standard in CS.  These are the inorder traversal, the 
+preorder traversal, and the postorder traversal.
+
+	<P>The meta class is an evolving ad-hoc interface for supporting those DS copy and deletion 
+operations which are "important" in a certain sense.  It is important to note that not every DS can 
+support every "important" operation.  This is because there are fundamentally two types of ADTs.  There 
+are those which support a concept of being "empty".  For instance, a queue or a stack is empty if it 
+contains no elements.  However, a data type such as an integer can not be empty because that integer type 
+will always contain an integer.  Thus we can not send a method asking that integer to delete its internal 
+data, and leave only an "empty integer."  However, it is very important that we have an operation to 
+empty a stack or a queue.
+
+	<P>It is also important to note that such an operation may require what is called propagation.  
+For instance to delete a binary tree of linked lists of trees of some tuple type X, we may need a 
+deletion that for each binary tree node of the binary tree of linked lists of trees of X deletes the 
+entire linked list of trees of X, and for each node of that linked list of trees of X deletes the entire 
+tree of X.  Thus, the deletion operation must propagate from the binary tree to each linked list, and to 
+each tree in each linked list, and to each X in each tree.  Since the binary tree does not internally 
+know how to delete every arbitrary DS that could possibly exist, it must ask each DS (in this case each 
+list) to delete itself using the meta interface.  And each list must ask each tree to delete itself.  And 
+each tree must ask each X to delete itself.  Sometimes one does not want propagation.  For instance, the 
+lists in this example may in fact be shared by several DSes.  In this case, it may not be appropriate 
+for the binary tree deletion to also delete the linked lists.  One needs to be able to modify how each DS 
+propagates.  Propagation is further covered in Part III.
+
+	<P>In meta terminology, a DS that supports a concept of emptiness is called a high-level DS.  
+A DS that does not support this concept is called a low-level DS.  Further, it is specified that a 
+high-level DS must support all appropriate operations when empty.  This additional constraint has a 
+number of ramifications.  For instance a node from a linked list (or a reference directly to such a node) 
+can not be used as a high-level DS because if such a DS were empty (i.e. there's a non-existent node or 
+NULL reference), one could not call an inquiry function to determine if the DS is in fact empty.  The 
+operation ((List)NULL)->Empty() isn't allowed in Java (because a method must be executed 
+on a valid object).  Therefore, such a DS is low-level.  Creating a class which contains such a 
+low-level reference as an attribute allows a high-level linked-list DS to be created.
+
+	<P>There are many ways to delete a high-level structure such as a queue which may be applicable 
+in different situations.  One might want to execute an operation which deletes both the queue, and the 
+data which it contains.  As mentioned before, one might only want to delete the internal data and thus 
+leave an empty queue.  There are also situations where one wants to delete a high level DS, but not the 
+information it contains.  This is especially true when one is manipulating shared lists.  There are a 
+similar variety of operations for copying a high-level DS.
+
+	<P>Of these copy and delete operations, only the ones that operate both on the DS and its 
+nternal data can usually be applied to low-level DSes.  There are some exceptions.  For instance, one 
+can legally copy all the internal data from one tuple into another type-identical tuple.  Generally, 
+though, the operations which apply to an arbitrary data structure can be partitioned into high-level 
+operations (which act on the data inside a structure), and low-level operations which act upon a 
+structure.  In the meta interface, methods which are high-level contain the suffix "Info" in their 
+names.  Those that are low-level do not.  The set of high-level operations is not inclusive in that 
+there are some low-level operations which properly apply only to high-level DSes.
+
+	<P>All high-level copy operations have a different syntax than their low-level counterparts.  
+This is because a copy of internal information between two high-level DSes requires information about 
+the location of the destination DS.  This information is passed in the parameter of such a method.  
+Low-level copy operations do not require, and do not use, a destination DS because they by nature create 
+new DSes.  In order to have a base class that applies symmetrically to all DSes, a reference to meta is 
+passed in all high-level copies.  However, both the source and destination DSes must be type-identical.  
+Further, it is useful to have the method generate an error message if the source and destination types 
+are not identical.  As a practical matter, this requires meta to be equipped with a method for the 
+support type inferencing.  In Java, this capability is provided by the language through the <code>instanceof</code>
+operator and the cast operator.
+
+	<P>Earlier meta implementations in C++ contained a "safety" #define that controlled the level
+of type-checking that meta used in its equivalent to the "cast" operator.  This allowed type-checking to
+be turned on in the "test" phase (to keep early bugs from core-dumping the program), and then turned off in the
+"production" phase (to maximize execution phase).  In its current incarnation, the Java VM always type-checks its
+casts.  It is believed that future Java compilers will allow a way to turn off this type checking when executing
+"production" code.  This will increase the execution speed of meta-based programs.
+
+	<P>Certain run-time checks required by "robust" applications 
+will be supported at both safety levels as meta evolves to take full advantage of Java.  Foremost among these 
+is the handling of out-of-memory situations.  A standard mechanism which will "roll back" any meta 
+copy operation which generates an out-of-memory exception is planned.  Such a mechanism will be 
+non-trivial because it must properly handle propagation.
+
+	<P><H2>Part II - Operations supported by the meta interface.</H2>
+
+
+	<P><A HREF="meta.html">See the documentation for the meta class.</A>
+
+
+	<P><H2>Part III - Details of DS implementation.</H2>
+
+	<P>Copying and deleting a sophisticated meta-compliant structure (a list, tree, 
+stack, queue, etc.) in a proper way requires high flexibility.  The data in a structure 
+may vary in type from node to node, requiring a different copy or deletion operation for 
+each data type.  The copy or deletion may need to propagate.  Meta uses a single, elegant 
+scheme to handle both of these problems.
+
+	<P>In a meta structure such as a list, the nodes of a list can be of one of two 
+types.  The first is a standard node type.  The standard node (in addition to references 
+to other nodes) contains a reference of type meta, a CopyMode, and an EraseMode.  
+The meta reference holds the data that is "contained" in that node.  All three fields 
+can accessed and modified by the programmer.  When a node needs to be erased, the 
+EraseMode for that node is called upon the data field by switching on an integer value.  
+This "erases" the data in some way chosen by the programmer.  
+After this erasure is complete, the node itself is deleted.
+
+	<P>When a standard node is copied, a somewhat reverse operation occurs.  First, a 
+new node is created.  Second, the CopyMode of the original node is applied to the original 
+data, returning a "copy" of that data.  That copy is placed in the data field of the new node.  
+Finally, the CopyMode and EraseMode of the original code are copied to the new node.  Thus, 
+the new node can copy and erase itself in the same way as the original node.
+
+	<P>The other type of node is an alternate node, or alt-node.  An alt-node is created 
+using a template, and incorporated some other meta-compliant class directly into a record of 
+that node (assuming that the Java VM will inline data associated with a member declared "final").  
+This can reduce the tangle of references required to implement some data structures, 
+and often results in better memory management.  A complete treatment of alt-nodes is beyond the 
+scope of this paper.  In addition to some class, 
+an alt-node contains an EraseMode and a CopyInfoMode.  Alt-nodes are erased in an identical manner 
+to standard nodes.  However alt-nodes tend to require high-level, as opposed to low-level, erasures.  
+Because the alt-node's data exists inside the node, it is not appropriate to set an EraseMode for 
+an outright deletion.  Copy operations for alt-nodes are also similar to those for standard nodes, 
+except that a high-level copy operation is performed.  
+
+	<P>Because the use of CopyModes, CopyInfoModes, and EraseModes give each node specific 
+instructions on how to "erase itself," propagation can be finely controlled.  Sometimes, 
+especially where data structures are shared, propagation needs to be completely turned off.  
+Operations like eraseDataInfo(), wake(), copyDataInfo(), copyDoNothing(), and 
+copyReturnNull() can be used as modes for this purpose.  At other times, one requires full 
+propagation throughout a DS.  One can use copyAll() and copyAllInfo() as modes to provide this 
+functionality.  Other operations fall in between, and fill specific roles for certain applications.
+
+	<P>Although this concept of using these modes can be explained simply, they can be used 
+in a tremendously complicated number of ways.  Usually, the type of data one wants to implement will 
+point to the appropriate modes.
+
+</BODY>
+
+
