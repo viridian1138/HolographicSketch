@@ -24,3 +24,10 @@ proguard/
 
 # Log Files
 *.log
+
+#################
+## OS-specific
+#################
+.DS_Store
+thumbs.db
+
