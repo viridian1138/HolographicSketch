@@ -30,4 +30,5 @@ proguard/
 #################
 .DS_Store
 thumbs.db
+._*
 
